@@ -1,14 +1,17 @@
 from enum import Enum
 
+import jsonpickle
+
 
 class TrainingWeek:
-    def __init__(self, activity_type):
-        self.days = []
+    def __init__(self, week_start, activity_type, days):
+        self.days = days
         self.activity_type = activity_type
-        self.week_start = None
-
-    def set_week_start(self, week_start):
         self.week_start = week_start
+        self.week_id = f"{week_start}_{activity_type}"
+
+    def __str__(self):
+        return f"{jsonpickle.encode(self, unpicklable=False)}"
 
 
 class TrainingDay:
@@ -20,7 +23,7 @@ class TrainingDay:
         self.day = day
 
     def __str__(self) -> str:
-        return f"{self.day} - {self.sessions}"
+        return f"{jsonpickle.encode(self, unpicklable=False)}"
 
 
 class TrainingSession:
@@ -30,7 +33,7 @@ class TrainingSession:
         self.session_id = session_id
 
     def __str__(self) -> str:
-        return f"{self.name} - {self.time} - {self.session_id}"
+        return f"{jsonpickle.encode(self, unpicklable=False)}"
 
 
 class ActivityType(Enum):
