@@ -1,4 +1,4 @@
-from training import TrainingSession, TrainingWeek, TrainingDay
+from model.training_model import TrainingSession, TrainingWeek, TrainingDay
 
 
 class Parser:
