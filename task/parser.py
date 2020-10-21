@@ -13,7 +13,7 @@ class Parser:
 
         weeks = []
         for week_num in range(0, weeks_forward):
-            weeks.append(self.__parse_week(driver, week_num))
+            weeks.append(self._parse_week(driver, week_num))
             agenda = driver.find_element_by_id("agenda")
             agenda_elems = agenda.find_elements_by_tag_name("a")
             for agenda_elem in agenda_elems:
@@ -22,7 +22,7 @@ class Parser:
 
         return weeks
 
-    def __parse_week(self, driver, week_num, day_event_class="internal-event-day-"):
+    def _parse_week(self, driver, week_num, day_event_class="internal-event-day-"):
         print(f"parsing week #{week_num + 1}")
         schedule_content_elem = driver.find_element_by_id("schedule_content")
         all_days_schedule = schedule_content_elem.find_elements_by_class_name("cal_column")

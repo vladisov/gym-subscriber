@@ -1,5 +1,5 @@
-from celery import Celery
-from celery import current_app
+import uuid
+
 from flask import Flask
 from flask import jsonify
 from flask import request
@@ -7,35 +7,12 @@ from flask_injector import FlaskInjector
 from injector import inject
 
 from configuration.dependencies import configure
+from model.job_model import JobRequest
 from repository.repository import Repository
-
-
-def init_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend=app.config['BACKEND'],
-        broker=app.config['BROKER']
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
-
-
-_ = current_app.loader.import_default_modules()
+from scheduler.job_scheduler import JobScheduler
+from service.subscribe_service import SubscribeTask
 
 flask_app = Flask("gym-sub")
-flask_app.config.update(
-    BROKER='redis://localhost:6379',
-    BACKEND='redis://localhost:6379'
-)
-
-celery = init_celery(flask_app)
 
 
 @inject
@@ -50,23 +27,32 @@ def get_week_info(repo: Repository):
 
 
 @inject
-@flask_app.route('/add')
-def add(repo: Repository):
-    result = add_together.delay(5, 7)
-    return result.wait()
+@flask_app.route('/submit')
+def submit_job(scheduler: JobScheduler):
+    class_id = request.args.get('class_id')
+    job_id = str(uuid.uuid1())
+    subscribe_service = SubscribeTask(job_id, class_id)
+    scheduler.add_job(JobRequest(job_id, subscribe_service))
+    return f'Created job with job id - {job_id}'
 
 
-@flask_app.route('/get_all')
-def get_all():
-    tasks = list(sorted(name for name in current_app.tasks
-                        if not name.startswith('celery.')))
-    return jsonify(tasks)
+@inject
+@flask_app.route('/cancel')
+def cancel_job(scheduler: JobScheduler):
+    job_id = request.args.get('job_id')
+    scheduler.cancel_job(job_id)
+    return f'Job has been canceled - {job_id}'
 
 
-@celery.task()
-def add_together(a, b):
-    """executing"""
-    return a + b
+@inject
+@flask_app.route('/info')
+def get_info(scheduler: JobScheduler):
+    # job_id = request.args.get('id')
+    jobs = scheduler.get_jobs()
+    return jsonify(jobs)
+    # if job_id in jobs:
+    #     return jsonify(scheduler.get_jobs()[job_id].done())
+    # return jsonify(f'job with id = {job_id} has not been found')
 
 
 FlaskInjector(app=flask_app, modules=[configure])

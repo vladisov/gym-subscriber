@@ -1,10 +1,6 @@
-import json
-
 import boto3
 
-
-def to_dict(obj):
-    return json.loads(json.dumps(obj, default=lambda o: o.__dict__))
+from utils.data_utils import to_dict
 
 
 class Repository:
