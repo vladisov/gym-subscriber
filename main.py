@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from repository import Repository
+from repository.repository import Repository
 
 
 def init_driver():
